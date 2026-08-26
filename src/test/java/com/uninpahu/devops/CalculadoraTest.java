@@ -19,7 +19,7 @@ class CalculadoraTest {
     @Test
     @DisplayName("Suma de dos numeros positivos")
     void testSumar() {
-        assertEquals(99, calculadora.sumar(3, 4));
+        assertEquals(7, calculadora.sumar(3, 4));
     }
 
     @Test
