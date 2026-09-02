@@ -9,7 +9,7 @@ public class ServicioSalud {
     public static void main(String[] args) throws Exception {
 
         HttpServer server = HttpServer.create(
-                new InetSocketAddress(8080), 0
+                new InetSocketAddress(9090), 0
         );
 
         server.createContext("/salud", exchange -> {
@@ -29,6 +29,6 @@ public class ServicioSalud {
         server.setExecutor(null);
         server.start();
 
-        System.out.println("Servicio de salud iniciado en :8080");
+        System.out.println("Servicio de salud iniciado en :9090");
     }
 }
