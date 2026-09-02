@@ -1,5 +1,5 @@
-// Laboratorio DevOps - UNINPAHU - Semana 2
-// Pipeline declarativo: Checkout (GitHub) -> Build -> Test -> Package
+// Laboratorio DevOps - UNINPAHU - Semana 3
+// Pipeline: Checkout -> Build -> Test -> Package -> Build Image -> Deploy -> Health Check
 
 pipeline {
 
@@ -16,7 +16,6 @@ pipeline {
     }
 
     triggers {
-        // Jenkins revisa GitHub cada 5 minutos buscando nuevos commits.
         pollSCM('H/5 * * * *')
     }
 
@@ -24,7 +23,7 @@ pipeline {
 
         stage('Checkout') {
             steps {
-                echo 'Clonando repositorio público desde GitHub...'
+                echo 'Clonando repositorio desde GitHub...'
                 checkout scm
             }
         }
@@ -52,8 +51,45 @@ pipeline {
             steps {
                 echo 'Empaquetando el archivo JAR...'
                 sh 'mvn -B package -DskipTests'
+
                 archiveArtifacts artifacts: 'target/*.jar',
                                  fingerprint: true
+            }
+        }
+
+        stage('Build Image') {
+            steps {
+                echo 'Construyendo imagen Docker...'
+
+                sh '''
+                    docker build -t calculadora-ci:${BUILD_NUMBER} .
+                '''
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                echo 'Desplegando aplicación...'
+
+                sh '''
+                    docker rm -f calculadora-app || true
+
+                    docker run -d \
+                    --name calculadora-app \
+                    -p 8081:8080 \
+                    calculadora-ci:${BUILD_NUMBER}
+                '''
+            }
+        }
+
+        stage('Health Check') {
+            steps {
+                echo 'Verificando estado de la aplicación...'
+
+                sh '''
+                    sleep 5
+                    curl -f http://host.docker.internal:8081/salud
+                '''
             }
         }
     }
@@ -64,7 +100,7 @@ pipeline {
         }
 
         failure {
-            echo 'El pipeline falló. Revisa la consola y el reporte de pruebas.'
+            echo 'El pipeline falló. Revisa la consola.'
         }
     }
 }
